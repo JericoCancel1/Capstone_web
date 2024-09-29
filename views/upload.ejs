@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Image</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <h1>Upload Your Image</h1>
+  </header>
+
+  <!-- Main content -->
+  <div class="container">
+    <div class="content">
+      <h2>Select an Image to Upload</h2>
+      <form ref='uploadForm' 
+        id='uploadForm' 
+        action='/upload' 
+        method='post' 
+        encType="multipart/form-data">
+          <input type="file" name="image" />
+          <input type='submit' value='Upload!' class="btn" />
+      </form>
+
+      <p><a href="/" class="btn">Back to Home</a></p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2024 Image Upload App. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
