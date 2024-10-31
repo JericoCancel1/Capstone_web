@@ -3,80 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A generic homepage">
-    <title>Home - Generic Website</title>
+    <meta name="description" content="Design on Demand - ...">
+    <title>Design on Demand</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
+            background-color: #f0f2f5;
+            color: #444;
+            line-height: 1.6;
         }
         header {
-            background-color: #4CAF50;
+            background-image: linear-gradient(to right, #ff9a9e, #fad0c4);
             color: white;
-            padding: 10px 0;
+            padding: 40px 0;
             text-align: center;
+            font-size: 2.2em;
+            letter-spacing: 1.5px;
+            position: relative;
+        }
+        header::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: #fff;
+            border-radius: 2px;
         }
         nav {
-            text-align: center;
-            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
         }
         nav a {
-            margin: 0 15px;
+            margin: 0 30px;
             text-decoration: none;
-            color: #333;
+            color: #ff6f61;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        nav a:hover {
+            color: #ff3e2f;
         }
         main {
-            padding: 20px;
+            padding: 60px;
             max-width: 1200px;
             margin: auto;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.1);
+        }
+        section {
+            margin-bottom: 50px;
+        }
+        #uploadSection {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 50px;
+            background-color: #ffe2e2;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        #uploadSection .content {
+            max-width: 50%;
+        }
+        #uploadSection .content h2 {
+            font-size: 2em;
+            color: #ff6f61;
+            margin-bottom: 20px;
+        }
+        #uploadSection input {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+        }
+        #uploadSection button {
+            padding: 12px 25px;
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+        }
+        #uploadSection button:hover {
+            background-color: #ff8876;
+        }
+        #viewToggle {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #viewToggle button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            background-color: #f8a5a5;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        #viewToggle button:hover {
+            background-color: #ff6f61;
+        }
+        #recommendations {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px;
+            background-color: #ffffff;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+        }
+        .product-card h3 {
+            color: #ff6f61;
+            margin-top: 15px;
+        }
+        .gallery-view .product-card {
+            width: 30%;
+        }
+        .list-view {
+            display: flex;
+            flex-direction: column;
+        }
+        .list-view .product-card {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 25px;
+            text-align: left;
+        }
+        .list-view .product-card img {
+            width: 200px;
+            height: auto;
+            margin-right: 20px;
+            border-radius: 10px;
+        }
+        .gallery-view .product-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        #collaborators ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        #collaborators ul li {
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        #collaborators ul li strong {
+            color: #ff6f61;
         }
         footer {
             text-align: center;
-            padding: 10px;
+            padding: 30px;
             background-color: #333;
             color: white;
-            position: fixed;
+            position: relative;
             bottom: 0;
             width: 100%;
+            font-size: 0.9em;
+        }
+        footer a {
+            color: #ff6f61;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        footer a:hover {
+            text-decoration: underline;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
-        <h1>Gyatt</h1>
+        <h1>Welcome to Design on Demand</h1>
+        <p>...slogan...</p>
     </header>
 
     <nav>
-        <a href="#about">About</a>
-        <a href="#services">Services</a>
-        <a href="#contact">Contact</a>
+        <a href="#uploadSection">Upload Image</a>
+        <a href="#preferences">Set Preferences</a>
+        <a href="#recommendations">View Suggestions</a>
+        <a href="#collaborators">Collaborators</a> 
     </nav>
 
     <main>
-        <section id="about">
-            <h2>About Us</h2>
-            <p>Welcome to our generic website. We offer a variety of services to meet your needs. Our team is dedicated to providing the best experience possible.</p>
+        <section id="uploadSection">
+            <div class="content">
+                <h2>Start Your Journey</h2>
+                <p>Upload an image that inspires you, and we'll help find the perfect matches for your space:</p>
+                <input type="file" id="imageUpload" accept="image/*">
+                <button onclick="uploadImage()">Upload & Discover</button>
+                <p id="uploadStatus"></p>
+            </div>
+            <div class="preview">
+                <img src="https://via.placeholder.com/300x300?text=Your+Design+Inspiration" alt="Uploaded Image Preview" id="imagePreview" style="border-radius: 10px; max-width: 300px;">
+            </div>
         </section>
 
-        <section id="services">
-            <h2>Our Services</h2>
-            <p>We specialize in offering generic services that can be tailored to fit your specific requirements. From consulting to product development, we've got you covered.</p>
+        <section id="preferences">
+            <h2>Personalize Your Design Search</h2>
+            <p>Select your preferences to tailor the suggestions to your unique style:</p>
+            <form id="preferencesForm">
+                <label for="colorScheme">Preferred Color Scheme:</label>
+                <select id="colorScheme">
+                    <option value="neutral">Neutral</option>
+                    <option value="warm">Warm</option>
+                    <option value="cool">Cool</option>
+                    <option value="bold">Bold</option>
+                </select><br><br>
+
+                <label for="material">Preferred Material:</label>
+                <select id="material">
+                    <option value="wood">Wood</option>
+                    <option value="metal">Metal</option>
+                    <option value="fabric">Fabric</option>
+                    <option value="leather">Leather</option>
+                </select><br><br>
+
+                <label for="style">Preferred Style:</label>
+                <select id="style">
+                    <option value="modern">Modern</option>
+                    <option value="classic">Classic</option>
+                    <option value="minimalist">Minimalist</option>
+                    <option value="rustic">Rustic</option>
+                </select><br><br>
+
+                <button type="button" onclick="getRecommendations()">Generate</button>
+            </form>
         </section>
 
-        <section id="contact">
-            <h2>Contact Us</h2>
-            <p>If you'd like to get in touch, feel free to email us at <a href="mailto:info@genericwebsite.com">info@genericwebsite.com</a> or call us at (123) 456-7890.</p>
+        <section id="recommendations">
+            <h2>Your Personalized Recommendations</h2>
+            <div id="viewToggle">
+                <button onclick="setView('gallery')">Gallery View</button>
+                <button onclick="setView('list')">List View</button>
+            </div>
+            <div id="productList" class="gallery-view">
+            </div>
+        </section>
+
+        <section id="collaborators">
+            <h2>Meet the Collaborators</h2>
+            <p>This site was created by the following individuals:</p>
+            <ul>
+                <li><strong>Gabriel E. Bonilla Faberlle</strong> - ...</li>
+                <li><strong>Jerico O. Cancel Rodriguez</strong> - ...</li>
+                <li><strong>Joy A. Martinez Guadalupe</strong> - ...</li>
+            </ul>
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2024 Generic Website. All rights reserved.</p>
+        <p>&copy; 2024 Design on Demand. All Rights Reserved. <a href="#">Privacy Policy</a> | <a href="#">Terms of Use</a></p>
     </footer>
+
+    <script>
+        function uploadImage() {
+            const fileInput = document.getElementById('imageUpload');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const imagePreview = document.getElementById('imagePreview');
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                // Display preview of the uploaded image
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                // Simulate image upload and machine learning analysis
+                uploadStatus.textContent = `We're analyzing "${file.name}" to find your perfect match...`;
+                setTimeout(() => {
+                    uploadStatus.textContent = 'Image analyzed! Your personalized suggestions are ready.';
+                }, 2000);
+            } else {
+                uploadStatus.textContent = 'Please select an image to upload.';
+            }
+        }
+
+        function getRecommendations() {
+            const colorScheme = document.getElementById('colorScheme').value;
+            const material = document.getElementById('material').value;
+            const style = document.getElementById('style').value;
+
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+
+            const products = [
+                {
+                    name: 'Modern Sofa',
+                    image: 'https://via.placeholder.com/300x200?text=Modern+Sofa',
+                    description: 'A sleek and minimalist modern sofa.',
+                    link: 'https://www.ikea.com/us/en/catalog/products/sofa-modern'
+                },
+                {
+                    name: 'Abstract Wall Art',
+                    image: 'https://via.placeholder.com/300x200?text=Abstract+Wall+Art',
+                    description: 'An abstract wall art piece that adds a bold touch to your room.',
+                    link: 'https://www.wayfair.com/decor-wallart'
+                },
+                {
+                    name: 'Rustic Coffee Table',
+                    image: 'https://via.placeholder.com/300x200?text=Rustic+Coffee+Table',
+                    description: 'A charming rustic coffee table with a wood finish.',
+                    link: 'https://www.wayfair.com/furniture-coffee-table'
+                }
+            ];
+
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.classList.add('product-card');
+
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <a href="${product.link}" target="_blank">View on retailer site</a>
+                `;
+
+                productList.appendChild(productCard);
+            });
+        }
+
+        function setView(view) {
+            const productList = document.getElementById('productList');
+            if (view === 'list') {
+                productList.classList.remove('gallery-view');
+                productList.classList.add('list-view');
+            } else {
+                productList.classList.remove('list-view');
+                productList.classList.add('gallery-view');
+            }
+        }
+    </script>
 </body>
 </html>
