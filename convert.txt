@@ -1,0 +1,32 @@
+import os
+from PIL import Image
+
+# Function to convert images to JPEG format and delete original files
+def convert_to_jpeg(directory):
+    valid_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif"}
+    for filename in os.listdir(directory):
+        if os.path.splitext(filename)[1].lower() in valid_extensions:
+            img_path = os.path.join(directory, filename)
+            try:
+                with Image.open(img_path) as img:
+                    rgb_img = img.convert("RGB")  # Convert to RGB
+                    jpeg_path = os.path.splitext(img_path)[0] + ".jpeg"
+                    rgb_img.save(jpeg_path, "JPEG")
+                    print(f"Converted {filename} to {jpeg_path}.")
+                
+                # Delete the original file
+                os.remove(img_path)
+                print(f"Deleted original file: {img_path}")
+
+            except Exception as e:
+                print(f"Error converting {filename}: {e}")
+
+# Directories to convert images
+anchor_path = "G:/myenv/furnituredataset/tables/anchor"
+positive_path = "G:/myenv/furnituredataset/tables/positive"
+negative_path = "G:/myenv/furnituredataset/tables/negative"
+
+# Convert images in each directory
+convert_to_jpeg(anchor_path)
+convert_to_jpeg(positive_path)
+convert_to_jpeg(negative_path)

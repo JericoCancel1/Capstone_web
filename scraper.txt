@@ -1,0 +1,158 @@
+import os
+import time
+import random
+import json
+import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
+from bs4 import BeautifulSoup
+import pyautogui
+
+# Directories to save images
+anchor_dir = "G:/myenv/furnituredataset/sofa/anchor"
+positive_dir = "G:/myenv/furnituredataset/sofa/positive"
+os.makedirs(anchor_dir, exist_ok=True)
+os.makedirs(positive_dir, exist_ok=True)
+
+# JSON file to log processed tables
+log_file = "G:/myenv/furnituredataset/sofa.json"
+
+# Load existing log or create a new one
+if os.path.exists(log_file):
+    with open(log_file, "r") as f:
+        table_log = json.load(f)
+else:
+    table_log = []
+
+# Amazon URL
+amazon_url = "https://www.amazon.com/s?k=sofa"
+
+# Set up Selenium WebDriver
+options = Options()
+options.add_argument("--disable-gpu")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-webgl")
+options.add_argument("--disable-software-rasterizer")
+options.add_argument(
+    "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36"
+)
+service = Service("G:/chromedriver-win64/chromedriver.exe")
+driver = webdriver.Chrome(service=service, options=options)
+
+try:
+    driver.get(amazon_url)
+    # time.sleep(random.uniform(2, 4))  # Randomized delay
+    time.sleep(1)
+
+    # Ensure we process a total of 200 tables, including any previously processed
+    image_count = len(table_log)  # Start from the next number based on existing log
+    total_needed = 500 - image_count  # Remaining number of tables to save
+    processed_count = 0
+
+    while processed_count < total_needed:
+        # Simulate user scrolling
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        # time.sleep(random.uniform(2, 4))
+        time.sleep(0.25)
+
+        # Parse listings using BeautifulSoup
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        listings = soup.find_all("div", {"data-component-type": "s-search-result"})
+        product_links = [
+            f"https://www.amazon.com{listing.find('a', {'class': 'a-link-normal'})['href']}"
+            for listing in listings
+            if listing.find("a", {"class": "a-link-normal"})
+        ]
+        product_links = list(set(product_links))  # Remove duplicates
+        print(f"Found {len(product_links)} product links on this page.")
+
+        for product_url in product_links:
+            if processed_count >= total_needed:
+                break
+
+            # Visit the product page
+            driver.get(product_url)
+            # time.sleep(random.uniform(2, 5))  # Random delay
+            time.sleep(1)
+
+            try:
+
+                window_height = driver.execute_script("return window.innerHeight;")
+                top_quarter_threshold = window_height * 0.4
+
+                second_thumbnail = driver.find_element(By.CSS_SELECTOR, "li[data-csa-c-posy='2']")
+                thumbnail_position = second_thumbnail.location
+
+                if thumbnail_position["y"] < top_quarter_threshold:  # Skip top-quarter thumbnails
+                    print(f"Skipping page with second thumbnail in top quarter: {product_url}")
+                    # Navigate back to the main search results page
+                    driver.back()
+                    time.sleep(0.5)  # Allow the main page to load
+                    continue
+                # Save the main image (anchor)
+                main_image = driver.find_element(By.ID, "landingImage")
+                first_image_url = main_image.get_attribute("src")
+                if first_image_url:
+                    response = requests.get(first_image_url)
+                    if response.status_code == 200:
+                        anchor_image_path = os.path.join(anchor_dir, f"{image_count + 1:03}.jpg")
+                        with open(anchor_image_path, "wb") as f:
+                            f.write(response.content)
+                        print(f"Saved anchor image: {anchor_image_path}")
+
+                ActionChains(driver).move_to_element(second_thumbnail).perform()
+                time.sleep(0.25)  # Ensure hover is performed
+
+                # Adjust cursor to target the large image displayed
+                location = second_thumbnail.location
+                size = second_thumbnail.size
+                x = location["x"] + size["width"] // 2
+                y = location["y"] - 25  # Move slightly up
+                pyautogui.moveTo(x, y)  # Instant mouse movement
+                pyautogui.rightClick()  # Perform the left click
+
+                # Save the image using PyAutoGUI
+                time.sleep(0.25)  # Wait for the context menu
+                pyautogui.press("down")  # Navigate to "Save image as..."
+                pyautogui.press("down")
+                pyautogui.press("enter")  # Select "Save image as..."
+                time.sleep(1)  # Wait for the "Save image as..." dialog
+
+                # Construct the file path
+                positive_image_path = os.path.join(positive_dir, f"{image_count + 1:03}.jpg")
+                pyautogui.typewrite(positive_image_path.replace("/", "\\"))
+                pyautogui.press("enter")  # Save the image
+
+                print(f"Saved positive image: {positive_image_path}")
+                # Log the processed table
+                table_log.append({"number": f"{image_count + 1:03}", "link": product_url})
+                with open(log_file, "w") as f:
+                    json.dump(table_log, f, indent=4)
+
+                image_count += 1
+                processed_count += 1
+
+            except Exception as e:
+                print(f"Error processing {product_url}: {e}")
+
+            driver.back()
+            time.sleep(0.5)
+
+        # Handle pagination
+        try:
+            next_button = driver.find_element(By.CSS_SELECTOR, "a.s-pagination-next")
+            if "disabled" in next_button.get_attribute("class"):
+                print("No more pages available.")
+                break
+            next_button.click()
+            # time.sleep(random.uniform(3, 6))  # Randomized delay
+            time.sleep(0.5)
+        except Exception as e:
+            print("No next page button found or error navigating to the next page.")
+            break
+
+finally:
+    driver.quit()

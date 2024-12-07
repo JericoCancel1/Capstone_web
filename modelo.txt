@@ -1,0 +1,127 @@
+import tensorflow as tf
+import tensorflow_addons as tfa
+import numpy as np
+
+# Paths to dataset directories
+anchor_path = "G:/myenv/furnituredataset/tables/anchor"
+positive_path = "G:/myenv/furnituredataset/tables/positive"
+negative_path = "G:/myenv/furnituredataset/tables/negative"
+
+# Image configuration
+input_shape = (28, 28, 3)  # RGB images with 3 channels
+batch_size = 32
+
+# Function to load and preprocess images from a directory
+def load_images_from_directory(directory, image_size=(28, 28)):
+    dataset = tf.keras.utils.image_dataset_from_directory(
+        directory,
+        labels=None,  # No labels needed here
+        label_mode=None,
+        color_mode="rgb",  # Ensure loading RGB images
+        image_size=image_size,
+        batch_size=None  # Load images as a flat dataset
+    )
+    normalization_layer = tf.keras.layers.Rescaling(1.0 / 255)
+    return dataset.map(lambda x: normalization_layer(x))
+
+# Load datasets
+anchor_dataset = load_images_from_directory(anchor_path)
+positive_dataset = load_images_from_directory(positive_path)
+negative_dataset = load_images_from_directory(negative_path)
+
+# Apply data augmentation
+data_augmentation = tf.keras.Sequential([
+    tf.keras.layers.RandomFlip("horizontal_and_vertical"),
+    tf.keras.layers.RandomRotation(0.2),
+])
+anchor_dataset = anchor_dataset.map(lambda x: data_augmentation(x))
+positive_dataset = positive_dataset.map(lambda x: data_augmentation(x))
+negative_dataset = negative_dataset.map(lambda x: data_augmentation(x))
+
+# Convert datasets to tensors
+anchor_images = tf.convert_to_tensor(list(anchor_dataset))
+positive_images = tf.convert_to_tensor(list(positive_dataset))
+negative_images = tf.convert_to_tensor(list(negative_dataset))
+
+# Ensure datasets have the same size
+min_size = min(len(anchor_images), len(positive_images), len(negative_images))
+anchor_images = anchor_images[:min_size]
+positive_images = positive_images[:min_size]
+negative_images = negative_images[:min_size]
+
+# Shuffle negative images to create diverse pairs
+negative_images = tf.random.shuffle(negative_images)
+
+# Create dummy labels for triplet loss
+dummy_labels = tf.zeros(min_size)
+
+# Create triplet dataset
+triplet_dataset = tf.data.Dataset.from_tensor_slices(
+    ((anchor_images, positive_images, negative_images), dummy_labels)
+).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+# Improved Siamese model creation
+def create_model(input_shape):
+    inp = tf.keras.layers.Input(shape=input_shape)
+    x = tf.keras.layers.Conv2D(64, (3, 3), padding="same", activation="relu")(inp)
+    x = tf.keras.layers.MaxPooling2D(pool_size=2)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
+    x = tf.keras.layers.Conv2D(128, (3, 3), padding="same", activation="relu")(x)
+    x = tf.keras.layers.MaxPooling2D(pool_size=2)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dropout(0.3)(x)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(256, activation="relu")(x)  # Add activation
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Dropout(0.5)(x)
+    model = tf.keras.Model(inp, x)
+    return model
+
+def get_siamese_model(input_shape):
+    # Define input tensors for the triplet
+    anchor_input = tf.keras.layers.Input(input_shape, name="anchor_input")
+    positive_input = tf.keras.layers.Input(input_shape, name="positive_input")
+    negative_input = tf.keras.layers.Input(input_shape, name="negative_input")
+    
+    # Shared embedding model
+    embedding_model = create_model(input_shape)
+    
+    # Generate embeddings
+    encoded_anchor = embedding_model(anchor_input)
+    encoded_positive = embedding_model(positive_input)
+    encoded_negative = embedding_model(negative_input)
+    
+    inputs = [anchor_input, positive_input, negative_input]
+    outputs = [encoded_anchor, encoded_positive, encoded_negative]
+    
+    # Siamese triplet model
+    siamese_triplet = tf.keras.Model(inputs=inputs, outputs=outputs)
+    
+    return embedding_model, siamese_triplet
+
+# Create and compile the Siamese model
+embedding_model, siamese_model = get_siamese_model(input_shape)
+siamese_model.compile(
+    optimizer=tf.keras.optimizers.Adam(0.001),
+    loss=tfa.losses.TripletSemiHardLoss()
+)
+
+# Train the Siamese model
+history = siamese_model.fit(
+    triplet_dataset,
+    epochs=10  # Increased epochs for better training
+)
+
+# Save the model
+siamese_model.save("siamese_model.h5")
+
+# Visualize the training loss
+# import matplotlib.pyplot as plt
+
+# plt.plot(history.history['loss'], label='Training Loss')
+# plt.title('Training Loss Over Epochs')
+# plt.xlabel('Epochs')
+# plt.ylabel('Loss')
+# plt.legend()
+# plt.show()

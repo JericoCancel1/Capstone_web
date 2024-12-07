@@ -1,0 +1,86 @@
+import os
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow.keras.models import load_model
+import tensorflow_addons as tfa
+
+# Force TensorFlow to use the CPU
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU
+tf.config.set_visible_devices([], 'GPU')  # Ensure TensorFlow sees no GPU
+
+# Custom objects for loading the model
+custom_objects = {"Addons>TripletSemiHardLoss": tfa.losses.TripletSemiHardLoss}
+
+# Load the trained embedding model
+siamese_model = load_model("siamese_model.h5", custom_objects=custom_objects)
+embedding_model = siamese_model.layers[3]  # Adjust this index if necessary
+
+# Function to preprocess a single image
+def preprocess_image(image_path, target_size=(28, 28)):
+    img = tf.keras.utils.load_img(image_path, color_mode="rgb", target_size=target_size)
+    img_array = tf.keras.utils.img_to_array(img) / 255.0  # Normalize
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    return img_array
+
+# Function to preprocess a batch of images
+def preprocess_dataset(dataset_path, target_size=(28, 28)):
+    dataset = tf.keras.utils.image_dataset_from_directory(
+        dataset_path,
+        labels=None,  # Ignore labels for testing
+        color_mode="rgb",
+        batch_size=32,
+        image_size=target_size
+    )
+    normalization_layer = tf.keras.layers.Rescaling(1.0 / 255)
+    dataset = dataset.map(lambda x: normalization_layer(x))
+    return dataset
+
+# Function to find the closest embeddings
+def find_closest_embeddings(target_image_path, embedding_model, dataset_embeddings, dataset_images, k=5):
+    # Preprocess the target image
+    target_image = preprocess_image(target_image_path)
+    
+    # Get embedding for the target image
+    target_embedding = embedding_model.predict(target_image)
+    
+    # Calculate distances between target and dataset embeddings
+    distances = np.linalg.norm(dataset_embeddings - target_embedding, axis=1)
+    
+    # Get the indices of the closest embeddings
+    closest_indices = np.argsort(distances)[:k]
+    
+    # Return the closest images and their distances
+    return [(dataset_images[idx], distances[idx]) for idx in closest_indices]
+
+# Load and preprocess the dataset images
+dataset_path = "G:/myenv/furnituredataset/tables/anchor"  # Update with your dataset path
+preprocessed_dataset = preprocess_dataset(dataset_path)
+dataset_images = np.concatenate([batch for batch in preprocessed_dataset])
+
+# Generate embeddings for the dataset images
+dataset_embeddings = embedding_model.predict(dataset_images)
+
+# Path to the target image
+target_image_path = "G:/myenv/011.jpeg"  # Replace with your target image path
+
+# Find the closest embeddings
+closest_images = find_closest_embeddings(
+    target_image_path=target_image_path,
+    embedding_model=embedding_model,
+    dataset_embeddings=dataset_embeddings,
+    dataset_images=dataset_images,
+    k=5
+)
+
+# Visualize the results
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 6, 1)
+plt.imshow(tf.keras.utils.load_img(target_image_path, target_size=(28, 28)))
+plt.title("Target Image")
+for i, (image, distance) in enumerate(closest_images):
+    plt.subplot(1, 6, i + 2)
+    plt.imshow(image)
+    plt.title(f"Dist: {distance:.2f}")
+plt.tight_layout()
+plt.show()
