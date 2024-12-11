@@ -1,0 +1,51 @@
+import os
+import numpy as np
+import tensorflow as tf
+
+# Path to anchor dataset directory
+anchor_path = "G:/myenv/furnituredataset/tables/anchor"
+
+# Image configuration
+image_size = (28, 28)  # Same size as model input
+
+# Function to load and preprocess images with filenames (no augmentation)
+def load_and_preprocess_images(directory, image_size=(28, 28)):
+    file_paths = []
+    images = []
+    
+    # Iterate over image files in the directory
+    for file_name in os.listdir(directory):
+        file_path = os.path.join(directory, file_name)
+        if file_name.lower().endswith(('png', 'jpg', 'jpeg')):  # Filter valid image files
+            image = tf.keras.utils.load_img(file_path, target_size=image_size)
+            image = tf.keras.preprocessing.image.img_to_array(image)  # Convert to array
+            image = image / 255.0  # Normalize to [0, 1]
+            images.append(image)
+            file_paths.append(file_name)  # Store only the filename (not the full path)
+    
+    images = np.array(images)
+    return images, file_paths
+
+# Save embeddings and filenames in a NumPy structured array
+def save_embeddings_with_filenames(embeddings, filenames, output_file):
+    dt = np.dtype([('filename', 'U255'), ('embedding', 'f4', embeddings.shape[1])])
+    structured_array = np.array([(f, e) for f, e in zip(filenames, embeddings)], dtype=dt)
+    np.save(output_file, structured_array)
+
+# Load and preprocess anchor images with filenames
+anchor_images, anchor_filenames = load_and_preprocess_images(anchor_path, image_size)
+
+# Load the pre-trained Siamese model
+siamese_model = tf.keras.models.load_model("siamese_model.h5", compile=False)
+
+# Extract the embedding layer from the Siamese model
+embedding_layer = siamese_model.layers[3]  # Adjust index if the layer structure changes
+
+# Generate embeddings using the embedding layer
+anchor_embeddings = embedding_layer.predict(anchor_images, batch_size=32)
+
+# Save embeddings and filenames in a NumPy file
+output_file = "anchor_embeddings.npy"
+save_embeddings_with_filenames(anchor_embeddings, anchor_filenames, output_file)
+
+print(f"Embeddings successfully extracted and saved to {output_file}")
